@@ -1,3 +1,4 @@
+import type {PreparedStatement} from './db';
 import {commissionStatements,compensationGuard} from './sales-compensation';
 import {commitMutation,MutationContext} from './sync-server';
 import {db,one,rows,stmt,uid,today} from './db';
@@ -5,7 +6,7 @@ export async function editRecord(type:string,b:any,recordId:string,userId:string
 const table:Record<string,string>={client:'clients',sale:'sales',payment:'payments',expense:'expenses',design:'design_tasks',employee:'employees',task:'tasks'};
 if(!table[type])throw new Error('هذا السجل لا يدعم التعديل');
 const old=await one('SELECT * FROM '+table[type]+' WHERE id=?',recordId);if(!old)throw new Error('السجل غير موجود');
-const batch:D1PreparedStatement[]=[];
+const batch:PreparedStatement[]=[];
 const projectExists=async(p:string)=>{if(p&&!await one('SELECT id FROM projects WHERE id=?',p))throw new Error('المشروع غير موجود');};
 const link=(expenseId:string,p:string|null)=>{batch.push(stmt('DELETE FROM project_costs WHERE expense_id=?',expenseId));if(p)batch.push(stmt('INSERT INTO project_costs(id,project_id,expense_id) VALUES(?,?,?)',uid(),p,expenseId));};
 if(type==='client'){batch.push(stmt('UPDATE clients SET name=?,phone=?,email=? WHERE id=?',b.name,b.phone,b.email,recordId));old.projectStarts=[];for(const change of b.projectStarts||[]){const project=await one('SELECT p.*,s.delivery FROM projects p JOIN sales s ON s.id=p.sale_id WHERE p.id=? AND s.client_id=?',change.projectId,recordId);if(!project)throw new Error('المشروع غير مرتبط بهذا العميل');if(change.start>project.delivery)throw new Error('بداية المشروع بعد تاريخ التسليم');old.projectStarts.push({projectId:project.id,start:project.start});batch.push(stmt('UPDATE projects SET start=? WHERE id=?',change.start,change.projectId));}}

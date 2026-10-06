@@ -1,5 +1,6 @@
-import {env} from 'cloudflare:workers';
-export function db():D1Database {if(!env.DB)throw new Error('قاعدة البيانات غير متاحة');return env.DB;}
+import {nodeDatabase} from './node-database.mjs';
+export type {PreparedStatement} from './node-database.mjs';
+export const db=nodeDatabase;
 export const uid=()=>crypto.randomUUID();
 export const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 // All business reads exclude deleted records, including SQL subqueries.

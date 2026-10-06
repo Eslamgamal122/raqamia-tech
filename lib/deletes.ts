@@ -1,3 +1,4 @@
+import type {PreparedStatement} from './db';
 import {commitMutation,MutationContext,canonical,conflict} from './sync-server';
 import {db,uid} from './db';
 const tables:Record<string,string>={client:'clients',sale:'sales',project:'projects',payment:'payments',expense:'expenses',design:'design_tasks',employee:'employees',task:'tasks',settings:'settings'};
@@ -20,7 +21,7 @@ export async function deleteRecord(type:string,id:string,userId:string,ctx?:Muta
   if(t==='design_tasks')await children('expenses','id',r.expense_id);
   if(t==='employees')await children('expenses','employee_id',r.id);
  }
- const at=new Date().toISOString();const before=Object.fromEntries([...affected].map(([t,rs])=>[t,[...rs.values()]]));if(expectedTree){const normalized=(tree:any)=>Object.fromEntries(Object.keys(tree).sort().map(t=>[t,[...tree[t]].sort((a:any,b:any)=>a.id.localeCompare(b.id))]));if(canonical(normalized(before))!==canonical(normalized(expectedTree)))conflict();}const batch:D1PreparedStatement[]=[];
+ const at=new Date().toISOString();const before=Object.fromEntries([...affected].map(([t,rs])=>[t,[...rs.values()]]));if(expectedTree){const normalized=(tree:any)=>Object.fromEntries(Object.keys(tree).sort().map(t=>[t,[...tree[t]].sort((a:any,b:any)=>a.id.localeCompare(b.id))]));if(canonical(normalized(before))!==canonical(normalized(expectedTree)))conflict();}const batch:PreparedStatement[]=[];
  for(const [t,rs] of affected)for(const key of rs.keys())batch.push(database.prepare('UPDATE '+t+' SET deleted_at=?'+(t==='employees'?',active=0':'')+' WHERE id=? AND deleted_at IS NULL').bind(at,key));
  batch.push(database.prepare('INSERT INTO audit_logs(id,user_id,entity,record_id,before_json,after_json,created_at) VALUES(?,?,?,?,?,?,?)').bind(uid(),userId,type,id,JSON.stringify(before),JSON.stringify({action:'delete',deleted_at:at}),at));
  return await commitMutation(batch,{ok:true,id,deleted:queue.length},ctx);

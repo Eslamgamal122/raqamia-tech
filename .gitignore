@@ -44,3 +44,10 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Private Node data and generated offline manifest
+/.data/
+*.sqlite*
+/public/offline-assets.json
+*.tsbuildinfo
+!.env.example
