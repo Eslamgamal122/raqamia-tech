@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=24.15.0 <25"
+    "node": ">=24.6.0 <25"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack && node scripts/offline-assets.mjs && node scripts/clean-build-cache.mjs",
+    "build": "node scripts/build.mjs",
     "start": "node server.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
